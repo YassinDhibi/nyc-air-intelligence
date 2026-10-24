@@ -30,6 +30,25 @@ def clean_weather(df: pd.DataFrame) -> pd.DataFrame:
         out[col] = pd.to_numeric(out[col], errors="coerce")
     return out.dropna(subset=["date", "temperature"]).drop_duplicates("date")
 
+def clean_station_reference(df: pd.DataFrame) -> pd.DataFrame:
+    required = {"site_id", "station", "county", "latitude", "longitude"}
+    missing = required.difference(df.columns)
+    if missing:
+        raise ValueError(f"Colonnes stations manquantes: {sorted(missing)}")
+    out = df[list(required)].copy()
+    out["site_id"] = out["site_id"].astype("string")
+    out["latitude"] = pd.to_numeric(out["latitude"], errors="coerce")
+    out["longitude"] = pd.to_numeric(out["longitude"], errors="coerce")
+    return out.dropna(subset=["site_id"]).drop_duplicates("site_id")
+
+def enrich_pollution_with_stations(pollution: pd.DataFrame, stations: pd.DataFrame) -> pd.DataFrame:
+    reference = clean_station_reference(stations)
+    metadata = ["station", "county", "latitude", "longitude"]
+    enriched = pollution.merge(reference, on="site_id", how="left", suffixes=("", "_ref"), validate="many_to_one")
+    for column in metadata:
+        enriched[column] = enriched[f"{column}_ref"].combine_first(enriched[column])
+    return enriched.drop(columns=[f"{column}_ref" for column in metadata])
+
 def build_daily(pollution: pd.DataFrame, weather: pd.DataFrame) -> pd.DataFrame:
     daily = pollution.groupby("date", as_index=False).agg(pm25_mean=("pm25","mean"), pm25_max=("pm25","max"), aqi_mean=("aqi","mean"), stations=("site_id","nunique"))
     result = daily.merge(weather, on="date", how="left")

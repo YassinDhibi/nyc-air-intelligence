@@ -4,7 +4,7 @@ Projet de 3ème LIG-BI conforme au brief **Analyse intelligente de données** : 
 
 ## Architecture
 
-`Sources CSV/API → validation et nettoyage Pandas → MongoDB → agrégations → dashboard Streamlit`
+`CSV pollution + JSON météo + XLSX stations → validation et nettoyage Pandas → MongoDB → agrégations → dashboard Streamlit`
 
 Collections : `pollution`, `weather`, `daily_analysis`. Les fichiers bruts restent dans `data/raw/`; les sorties nettoyées sont écrites dans `data/processed/`.
 
@@ -25,7 +25,7 @@ Le dashboard contient 4 KPI, 5 graphiques, des filtres temporels et PM2.5, deux 
 
 | Exigence | Réalisation |
 |---|---|
-| 2 sources/fichiers minimum | `pollution_nyc_2024.csv` et `weather_nyc_2024.csv` |
+| Plus de 2 types de fichiers | 3 formats réellement lus par l'ETL : `pollution_nyc_2024.csv`, `weather_nyc_2024.json` et `stations_nyc.xlsx` |
 | ETL modulaire | `src/extract.py`, `src/transform.py`, `scripts/run_etl.py` |
 | MongoDB | 3 collections, insertion, requêtes, index et 2 agrégations |
 | Pandas | conversion, `dropna`, dédoublonnage, filtrage, `groupby`, fusion et statistiques |
@@ -38,8 +38,8 @@ Le dashboard contient 4 KPI, 5 graphiques, des filtres temporels et PM2.5, deux 
 ## Données
 
 - Pollution : mesures AQS quotidiennes de New York pour 2024.
-- Météo : Open-Meteo Archive API, coordonnées de New York, année 2024.
-- Stations : latitude, longitude, nom et comté inclus dans les observations AQS.
+- Météo : réponse Open-Meteo Archive API conservée en JSON, coordonnées de New York, année 2024.
+- Stations : référentiel Excel distinct avec identifiant, latitude, longitude, nom et comté ; il enrichit les mesures de pollution pendant l'ETL.
 
 ## Tests
 
